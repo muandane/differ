@@ -14,9 +14,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/grafana/kubernetes-diff-logger/pkg/differ"
-	"github.com/grafana/kubernetes-diff-logger/pkg/signals"
-	"github.com/grafana/kubernetes-diff-logger/pkg/wrapper"
+	"github.com/muandane/differ/pkg/differ"
+	"github.com/muandane/differ/pkg/signals"
+	"github.com/muandane/differ/pkg/wrapper"
 	"github.com/pkg/errors"
 )
 

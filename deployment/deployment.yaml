@@ -20,7 +20,7 @@ spec:
         command:
         - /app/app
         - -config=/etc/kube-diff-logger/config.yml
-        image: grafana/kubernetes-diff-logger:latest       
+        image: muandane/differ:latest       
         resources:
           limits:
             cpu: 100m

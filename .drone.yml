@@ -8,7 +8,7 @@ steps:
   settings:
     auto_tag: true
     dockerfile: Dockerfile
-    repo: grafana/kubernetes-diff-logger
+    repo: muandane/differ
     tags: latest
     password:
       from_secret: docker_password

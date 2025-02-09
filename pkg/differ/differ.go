@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/go-test/deep"
-	"github.com/grafana/kubernetes-diff-logger/pkg/wrapper"
+	"github.com/muandane/differ/pkg/wrapper"
 	"github.com/ryanuber/go-glob"
 )
 
