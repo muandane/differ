@@ -16,7 +16,7 @@ func WrapStatefulSet(i interface{}) (KubernetesObject, error) {
 	s, ok := i.(*v1.StatefulSet)
 
 	if !ok {
-		return nil, fmt.Errorf("Expected v1.StatefulSet received %T", i)
+		return nil, fmt.Errorf("expected v1.StatefulSet received %T", i)
 	}
 
 	return &statefulset{

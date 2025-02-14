@@ -16,7 +16,7 @@ func WrapDaemonSet(i interface{}) (KubernetesObject, error) {
 	d, ok := i.(*v1.DaemonSet)
 
 	if !ok {
-		return nil, fmt.Errorf("Expected v1.DaemonSet received %T", i)
+		return nil, fmt.Errorf("expected v1.DaemonSet received %T", i)
 	}
 
 	return &daemonset{

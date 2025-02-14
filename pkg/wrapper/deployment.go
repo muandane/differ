@@ -16,7 +16,7 @@ func WrapDeployment(i interface{}) (KubernetesObject, error) {
 	d, ok := i.(*v1.Deployment)
 
 	if !ok {
-		return nil, fmt.Errorf("Expected v1.Deployment received %T", i)
+		return nil, fmt.Errorf("expected v1.Deployment received %T", i)
 	}
 
 	return &deployment{

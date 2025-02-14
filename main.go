@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -108,13 +108,15 @@ func informerForName(name string, i informers.SharedInformerFactory) (cache.Shar
 		return i.Apps().V1().DaemonSets().Informer(), wrapper.WrapDaemonSet, nil
 	case "cronjob":
 		return i.Batch().V1().CronJobs().Informer(), wrapper.WrapCronJob, nil
+	case "configMap":
+		return i.Core().V1().ConfigMaps().Informer(), wrapper.WrapConfigMap, nil
 	}
 
-	return nil, nil, fmt.Errorf("Unsupported informer name %s", name)
+	return nil, nil, fmt.Errorf("unsupported informer name %s", name)
 }
 
 func loadConfig(filename string, cfg *Config) error {
-	buf, err := ioutil.ReadFile(filename)
+	buf, err := os.ReadFile(filename)
 	if err != nil {
 		return errors.Wrap(err, "Error reading config file")
 	}

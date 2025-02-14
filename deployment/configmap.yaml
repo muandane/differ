@@ -14,3 +14,5 @@ data:
       type: "daemonset"
     - nameFilter: "*"
       type: "cronjob"
+    - nameFilter: "*"
+      type: "configMap"

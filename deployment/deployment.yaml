@@ -20,7 +20,7 @@ spec:
         command:
         - /app/app
         - -config=/etc/kube-diff-logger/config.yml
-        image: muandane/differ:latest       
+        image: differ:1
         resources:
           limits:
             cpu: 100m

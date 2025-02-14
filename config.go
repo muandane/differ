@@ -17,7 +17,7 @@ type DifferConfig struct {
 func DefaultConfig() Config {
 	return Config{
 		Differs: []DifferConfig{
-			DifferConfig{
+			{
 				NameFilter: "*",
 				Type:       "deployment",
 			},

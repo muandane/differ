@@ -1,6 +1,6 @@
 module github.com/muandane/differ
 
-go 1.23.6
+go 1.24
 
 require (
 	github.com/apex/log v1.9.0

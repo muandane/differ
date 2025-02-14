@@ -16,7 +16,7 @@ func WrapCronJob(i interface{}) (KubernetesObject, error) {
 	d, ok := i.(*v1.CronJob)
 
 	if !ok {
-		return nil, fmt.Errorf("Expected v1.CronJob received %T", i)
+		return nil, fmt.Errorf("expected v1.CronJob received %T", i)
 	}
 
 	return &CronJob{
