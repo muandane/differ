@@ -9,8 +9,15 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v2"
+
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -43,10 +50,22 @@ func init() {
 func main() {
 	flag.Parse()
 
+	var config *rest.Config
+	var err error
+
 	// build k8s client
-	config, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
-	if err != nil {
-		log.Fatalf("Error building kubeconfig: %s", err.Error())
+	if os.Getenv("KUBERNETES_SERVICE_HOST") != "" {
+		// In-cluster configuration
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			log.Fatalf("Error building in-cluster config: %s", err.Error())
+		}
+	} else {
+		// Out-of-cluster configuration (for local development)
+		config, err = clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
+		if err != nil {
+			log.Fatalf("Error building kubeconfig: %s", err.Error())
+		}
 	}
 
 	client, err := kubernetes.NewForConfig(config)
