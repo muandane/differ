@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/go-test/deep"
+	"github.com/muandane/differ/pkg/metrics"
 	"github.com/muandane/differ/pkg/wrapper"
 	"github.com/ryanuber/go-glob"
 )
@@ -58,6 +59,7 @@ func (d *Differ) added(added interface{}) {
 		meta := object.GetMetadata()
 
 		d.output.WriteAdded(meta.Name, meta.Namespace, object.GetType())
+		metrics.ResourcesAdded.WithLabelValues(object.GetType(), meta.Namespace).Inc()
 	}
 }
 
@@ -70,6 +72,13 @@ func (d *Differ) updated(old interface{}, new interface{}) {
 			meta := newObject.GetMetadata()
 
 			d.output.WriteUpdated(meta.Name, meta.Namespace, newObject.GetType(), diff)
+			metrics.ResourcesUpdated.WithLabelValues(newObject.GetType(), meta.Namespace).Inc()
+
+			diffSize := 0
+			for _, d := range diff {
+				diffSize += len(d)
+			}
+			metrics.DiffSize.WithLabelValues(newObject.GetType(), meta.Namespace).Observe(float64(diffSize))
 		}
 	}
 }
@@ -81,6 +90,7 @@ func (d *Differ) deleted(deleted interface{}) {
 		meta := object.GetMetadata()
 
 		d.output.WriteDeleted(meta.Name, meta.Namespace, object.GetType())
+		metrics.ResourcesDeleted.WithLabelValues(object.GetType(), meta.Namespace).Inc()
 	}
 }
 
@@ -93,6 +103,7 @@ func (d *Differ) mustWrap(i interface{}) wrapper.KubernetesObject {
 
 	if err != nil {
 		log.Fatalf("Failed to wrap interface %v", err)
+		metrics.ProcessingErrors.WithLabelValues("unknown", "wrapping_error").Inc()
 	}
 
 	return o

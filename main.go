@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -22,9 +23,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/muandane/differ/pkg/differ"
+	"github.com/muandane/differ/pkg/metrics"
 	"github.com/muandane/differ/pkg/signals"
 	"github.com/muandane/differ/pkg/wrapper"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -112,6 +115,23 @@ func main() {
 		}(d)
 	}
 
+	if cfg.Metrics.Enabled {
+		// Register a metric for resyncs
+		informerFactory.WaitForCacheSync(stopCh)
+		for _, cfgDiffer := range cfg.Differs {
+			metrics.WatcherResyncs.WithLabelValues(cfgDiffer.Type).Add(0) // Initialize the counter
+		}
+
+		// Start HTTP server for Prometheus metrics
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			metricsAddr := ":" + cfg.Metrics.Port
+			log.Printf("Starting metrics server on %s", metricsAddr)
+			if err := http.ListenAndServe(metricsAddr, nil); err != nil {
+				log.Fatalf("Error starting metrics server: %v", err)
+			}
+		}()
+	}
 	informerFactory.Start(stopCh)
 	wg.Wait()
 }
