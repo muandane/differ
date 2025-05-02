@@ -1,1 +1,4 @@
 kubernetes-diff-logger
+.vscode
+.DS_Store
+.env

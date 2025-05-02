@@ -18,9 +18,10 @@ spec:
       containers:
       - name: kube-diff-logger
         command:
-        - /app/app
+        - ./differ
         - -config=/etc/kube-diff-logger/config.yml
-        image: grafana/kubernetes-diff-logger:latest       
+        image: muandane/differ:0.0.1
+        imagePullPolicy: Always
         resources:
           limits:
             cpu: 100m
@@ -28,6 +29,9 @@ spec:
           requests:
             cpu: 50m
             memory: 50Mi
+        ports:
+        - containerPort: 2112
+          name: metrics
         volumeMounts:
         - mountPath: /etc/kube-diff-logger
           name: kube-diff-logger
@@ -36,3 +40,14 @@ spec:
       - configMap:
           name: kube-diff-logger
         name: kube-diff-logger
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-diff-logger
+spec:
+  selector:
+    name: kube-diff-logger
+  ports:
+  - port: 2112
+    targetPort: metrics

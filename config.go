@@ -3,6 +3,11 @@ package main
 // Config represents the configuration options for kubernetes-diff-logger
 type Config struct {
 	Differs []DifferConfig `yaml:"differs"`
+	Metrics MetricsConfig  `yaml:"metrics"`
+}
+type MetricsConfig struct {
+	Enabled bool   `yaml:"enabled"`
+	Port    string `yaml:"port"`
 }
 
 // DifferConfig represents the configuration options for a single Diffing process
@@ -17,10 +22,14 @@ type DifferConfig struct {
 func DefaultConfig() Config {
 	return Config{
 		Differs: []DifferConfig{
-			DifferConfig{
+			{
 				NameFilter: "*",
 				Type:       "deployment",
 			},
+		},
+		Metrics: MetricsConfig{
+			Enabled: true,
+			Port:    "2112",
 		},
 	}
 }

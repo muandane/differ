@@ -14,3 +14,8 @@ data:
       type: "daemonset"
     - nameFilter: "*"
       type: "cronjob"
+    - nameFilter: "*"
+      type: "configMap"
+    metrics:
+      enabled: true
+      port: "2112"

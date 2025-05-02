@@ -3,21 +3,31 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"net/http"
+	"os"
 	"sync"
 	"time"
 
 	"gopkg.in/yaml.v2"
+
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/grafana/kubernetes-diff-logger/pkg/differ"
-	"github.com/grafana/kubernetes-diff-logger/pkg/signals"
-	"github.com/grafana/kubernetes-diff-logger/pkg/wrapper"
+	"github.com/muandane/differ/pkg/differ"
+	"github.com/muandane/differ/pkg/metrics"
+	"github.com/muandane/differ/pkg/signals"
+	"github.com/muandane/differ/pkg/wrapper"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -43,10 +53,22 @@ func init() {
 func main() {
 	flag.Parse()
 
+	var config *rest.Config
+	var err error
+
 	// build k8s client
-	config, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
-	if err != nil {
-		log.Fatalf("Error building kubeconfig: %s", err.Error())
+	if os.Getenv("KUBERNETES_SERVICE_HOST") != "" {
+		// In-cluster configuration
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			log.Fatalf("Error building in-cluster config: %s", err.Error())
+		}
+	} else {
+		// Out-of-cluster configuration (for local development)
+		config, err = clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
+		if err != nil {
+			log.Fatalf("Error building kubeconfig: %s", err.Error())
+		}
 	}
 
 	client, err := kubernetes.NewForConfig(config)
@@ -93,6 +115,23 @@ func main() {
 		}(d)
 	}
 
+	if cfg.Metrics.Enabled {
+		// Register a metric for resyncs
+		informerFactory.WaitForCacheSync(stopCh)
+		for _, cfgDiffer := range cfg.Differs {
+			metrics.WatcherResyncs.WithLabelValues(cfgDiffer.Type).Add(0) // Initialize the counter
+		}
+
+		// Start HTTP server for Prometheus metrics
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			metricsAddr := ":" + cfg.Metrics.Port
+			log.Printf("Starting metrics server on %s", metricsAddr)
+			if err := http.ListenAndServe(metricsAddr, nil); err != nil {
+				log.Fatalf("Error starting metrics server: %v", err)
+			}
+		}()
+	}
 	informerFactory.Start(stopCh)
 	wg.Wait()
 }
@@ -108,13 +147,15 @@ func informerForName(name string, i informers.SharedInformerFactory) (cache.Shar
 		return i.Apps().V1().DaemonSets().Informer(), wrapper.WrapDaemonSet, nil
 	case "cronjob":
 		return i.Batch().V1().CronJobs().Informer(), wrapper.WrapCronJob, nil
+	case "configMap":
+		return i.Core().V1().ConfigMaps().Informer(), wrapper.WrapConfigMap, nil
 	}
 
-	return nil, nil, fmt.Errorf("Unsupported informer name %s", name)
+	return nil, nil, fmt.Errorf("unsupported informer name %s", name)
 }
 
 func loadConfig(filename string, cfg *Config) error {
-	buf, err := ioutil.ReadFile(filename)
+	buf, err := os.ReadFile(filename)
 	if err != nil {
 		return errors.Wrap(err, "Error reading config file")
 	}

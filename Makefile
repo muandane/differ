@@ -2,4 +2,4 @@
 
 drone:
 	drone lint
-	drone --server https://drone.grafana.net sign --save grafana/kubernetes-diff-logger
+	drone --server https://drone.grafana.net sign --save muandane/differ

@@ -4,16 +4,13 @@ metadata:
   name: kube-diff-logger
 rules:
 - apiGroups:
-  - apps
-  - batch
+  - "*"
   resources:
-  - daemonsets
-  - deployments
-  - statefulsets
-  - cronjobs
+  - "*"
   verbs:
   - list
   - watch
+  - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
